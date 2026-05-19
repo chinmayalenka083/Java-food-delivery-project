@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Java / Maven build output
+target/
+**/target/
+
+# Frontend build output
+dist/
+build/
+web-build/
+.vite/
+.next/
+out/
+coverage/
+
+# Expo / React Native local output
+.expo/
+expo-env.d.ts
+.metro-health-check*
+ios/
+android/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# IDE and OS files
+.codex/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Local Git metadata backups
+.git-*-backup/
+**/.git-*-backup/
