@@ -1,112 +1,96 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { Button, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+const restaurants = [
+  { id: 'r1', name: 'Pizza Palace', category: 'Pizza', rating: 4.6, eta: '25-30 mins' },
+  { id: 'r2', name: 'Burger Barn', category: 'Burgers', rating: 4.4, eta: '20-25 mins' },
+  { id: 'r3', name: 'Sushi Zen', category: 'Sushi', rating: 4.8, eta: '35-40 mins' },
+  { id: 'r4', name: 'Taco Town', category: 'Mexican', rating: 4.3, eta: '18-22 mins' },
+  { id: 'r5', name: 'Curry Corner', category: 'Indian', rating: 4.7, eta: '30-35 mins' },
+];
 
-export default function TabTwoScreen() {
+const categories = ['All', 'Pizza', 'Burgers', 'Sushi', 'Mexican', 'Indian'];
+
+export default function Explore() {
+  const router = useRouter();
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('All');
+
+  const filtered = useMemo(() => {
+    return restaurants.filter((r) => {
+      const matchesCat = category === 'All' || r.category === category;
+      const matchesSearch = r.name.toLowerCase().includes(search.toLowerCase());
+      return matchesCat && matchesSearch;
+    });
+  }, [category, search]);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <View style={{ flex: 1, marginTop: 50, padding: 16 }}>
+      <Text style={{ fontSize: 24, marginBottom: 8, fontWeight: '700' }}>Explore Restaurants</Text>
+      <TextInput
+        value={search}
+        onChangeText={setSearch}
+        placeholder="Search restaurants..."
+        style={styles.input}
+      />
+
+      <FlatList
+        horizontal
+        data={categories}
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => item}
+        style={{ marginBottom: 14 }}
+        renderItem={({ item }) => (
+          <Button
+            title={item}
+            onPress={() => setCategory(item)}
+            color={item === category ? '#1f6f8b' : '#aaa'}
+          />
+        )}
+      />
+
+      <FlatList
+        data={filtered}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Text style={styles.title}>{item.name}</Text>
+            <Text style={styles.meta}>Category: {item.category}</Text>
+            <Text style={styles.meta}>Rating: {item.rating}</Text>
+            <Text style={styles.meta}>ETA: {item.eta}</Text>
+            <Button title="View menu" onPress={() => router.push(`/restaurant/${item.id}/menu` as any)} />
+          </View>
+        )}
+        ListEmptyComponent={() => <Text>No restaurants found.</Text>}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  card: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  meta: {
+    color: '#555',
+    marginBottom: 2,
   },
 });
