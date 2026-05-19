@@ -1,0 +1,155 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: foodbox
+      POSTGRES_PASSWORD: foodbox
+      POSTGRES_DB: foodbox
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.3
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.3
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+  zipkin:
+    image: openzipkin/zipkin:2.24
+    ports:
+      - "9411:9411"
+
+  discovery:
+    build:
+      context: .
+      dockerfile: Dockerfile.discovery
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+    ports:
+      - "8761:8761"
+    depends_on:
+      - postgres
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.gateway
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      JWT_SECRET: change-me-please-change-me-256-bit-secret-key
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka
+    ports:
+      - "8080:8080"
+    depends_on:
+      - discovery
+
+  auth-user:
+    build:
+      context: .
+      dockerfile: Dockerfile.auth
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: foodbox
+      DB_PASSWORD: foodbox
+      JWT_SECRET: change-me-please-change-me-256-bit-secret-key
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka
+    depends_on:
+      - postgres
+      - discovery
+
+  restaurant-menu:
+    build:
+      context: .
+      dockerfile: Dockerfile.menu
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: foodbox
+      DB_PASSWORD: foodbox
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka
+    depends_on:
+      - postgres
+      - discovery
+
+  cart-order:
+    build:
+      context: .
+      dockerfile: Dockerfile.cart
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: foodbox
+      DB_PASSWORD: foodbox
+      JWT_SECRET: change-me-please-change-me-256-bit-secret-key
+      PAYMENT_WEBHOOK_SECRET: change-me
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka
+    depends_on:
+      - postgres
+      - discovery
+
+  payment:
+    build:
+      context: .
+      dockerfile: Dockerfile.payment
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: foodbox
+      DB_PASSWORD: foodbox
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+      - discovery
+
+  subscription:
+    build:
+      context: .
+      dockerfile: Dockerfile.subscription
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka
+    ports:
+      - "8084:8084"
+    depends_on:
+      - discovery
+
+  notification:
+    build:
+      context: .
+      dockerfile: Dockerfile.notification
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka
+    ports:
+      - "8086:8086"
+    depends_on:
+      - discovery
+
+volumes:
+  pgdata:

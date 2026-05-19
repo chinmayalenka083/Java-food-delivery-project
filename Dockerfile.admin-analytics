@@ -1,0 +1,12 @@
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /app
+# Build only the admin-analytics module plus its dependencies
+COPY . .
+RUN mvn -pl admin-analytics -am -DskipTests package
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/admin-analytics/target/admin-analytics-0.1.0-SNAPSHOT.jar app.jar
+ENV JAVA_OPTS=""
+EXPOSE 8088
+ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]

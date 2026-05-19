@@ -1,0 +1,61 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: false
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: auth-user
+          uri: lb://auth-user
+          predicates:
+            - Path=/auth/**,/users/**
+        - id: restaurant-menu
+          uri: lb://restaurant-menu
+          predicates:
+            - Path=/restaurants/**,/foods/**
+        - id: cart-order
+          uri: lb://cart-order
+          predicates:
+            - Path=/cart/**,/orders/**
+        - id: subscription
+          uri: lb://subscription
+          predicates:
+            - Path=/subscriptions/**
+        - id: payment
+          uri: lb://payment
+          predicates:
+            - Path=/payments/**,/webhooks/payments/**
+        - id: notification
+          uri: lb://notification
+          predicates:
+            - Path=/notifications/**
+        - id: delivery-partner
+          uri: lb://delivery-partner
+          predicates:
+            - Path=/deliveries/**
+        - id: admin-analytics
+          uri: lb://admin-analytics
+          predicates:
+            - Path=/admin/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+jwt:
+  secret: ${JWT_SECRET:change-me-please-change-me-256-bit-secret-key}
