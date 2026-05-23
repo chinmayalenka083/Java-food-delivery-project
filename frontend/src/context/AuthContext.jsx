@@ -56,6 +56,25 @@ export function AuthProvider({ children }) {
       setError(null);
 
       const data = await api.auth.register(body);
+
+      const nextToken =
+          data?.accessToken ||
+          data?.token ||
+          data?.jwt ||
+          data?.data?.token;
+
+      if (!nextToken) {
+        throw new Error("Token not found in register response");
+      }
+
+      localStorage.setItem("token", nextToken);
+      if (data?.refreshToken) {
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
+
+      setTokenState(nextToken);
+      setUser(data?.user ?? { email: body.email });
+
       return data;
     } catch (err) {
       setError(err.message || "Register failed");
@@ -101,6 +120,16 @@ export function AuthProvider({ children }) {
 
     initAuth();
   }, [token]);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setTokenState(null);
+      setUser(null);
+    };
+
+    window.addEventListener("foodbox:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("foodbox:unauthorized", handleUnauthorized);
+  }, []);
 
   /* =========================
      📤 CONTEXT VALUE

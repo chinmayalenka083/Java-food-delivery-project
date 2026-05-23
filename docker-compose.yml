@@ -67,7 +67,7 @@ services:
       context: .
       dockerfile: Dockerfile.auth
     environment:
-      SPRING_PROFILES_ACTIVE: default
+      SPRING_PROFILES_ACTIVE: local
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: foodbox
@@ -83,7 +83,7 @@ services:
       context: .
       dockerfile: Dockerfile.menu
     environment:
-      SPRING_PROFILES_ACTIVE: default
+      SPRING_PROFILES_ACTIVE: local
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: foodbox
@@ -98,7 +98,7 @@ services:
       context: .
       dockerfile: Dockerfile.cart
     environment:
-      SPRING_PROFILES_ACTIVE: default
+      SPRING_PROFILES_ACTIVE: local
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: foodbox
@@ -132,11 +132,14 @@ services:
       context: .
       dockerfile: Dockerfile.subscription
     environment:
-      SPRING_PROFILES_ACTIVE: default
+      SPRING_PROFILES_ACTIVE: local
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: foodbox
+      DB_PASSWORD: foodbox
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka
-    ports:
-      - "8084:8084"
     depends_on:
+      - postgres
       - discovery
 
   notification:

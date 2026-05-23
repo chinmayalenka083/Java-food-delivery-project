@@ -15,6 +15,13 @@ const setRefreshToken = (token) => {
 
 const removeToken = () => localStorage.removeItem("token");
 
+const saveAuthTokens = (data) => {
+  const token = data?.accessToken || data?.token;
+  if (token) setToken(token);
+  if (data?.refreshToken) setRefreshToken(data.refreshToken);
+  return token;
+};
+
 /* =========================
    📦 HEADERS
 ========================= */
@@ -42,14 +49,22 @@ async function request(path, options = {}) {
 
     if (!res.ok) {
       const errorText = await res.text();
+      let message = errorText || "Something went wrong";
+
+      try {
+        const errorJson = JSON.parse(errorText);
+        message = errorJson.message || errorJson.error || message;
+      } catch {
+        // Keep the raw response text when the backend does not return JSON.
+      }
 
       // Handle Unauthorized
       if (res.status === 401) {
         removeToken();
-        window.location.href = "/login";
+        window.dispatchEvent(new Event("foodbox:unauthorized"));
       }
 
-      throw new Error(errorText || "Something went wrong");
+      throw new Error(message);
     }
 
     if (res.status === 204) return null;
@@ -66,10 +81,13 @@ async function request(path, options = {}) {
 ========================= */
 const auth = {
   register: async (body) => {
-    return request("/auth/register", {
+    const data = await request("/auth/register", {
       method: "POST",
       body: JSON.stringify(body),
     });
+
+    saveAuthTokens(data);
+    return data;
   },
 
   login: async (body) => {
@@ -78,10 +96,7 @@ const auth = {
       body: JSON.stringify(body),
     });
 
-    const token = data?.accessToken || data?.token;
-    if (token) setToken(token);
-    if (data?.refreshToken) setRefreshToken(data.refreshToken);
-
+    saveAuthTokens(data);
     return data;
   },
 

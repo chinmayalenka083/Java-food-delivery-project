@@ -38,10 +38,6 @@ function Login() {
           email: form.email.trim(),
           password: form.password,
         });
-        await login({
-          email: form.email.trim(),
-          password: form.password,
-        });
       } else {
         await login({
           email: form.email.trim(),
